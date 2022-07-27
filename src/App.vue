@@ -23,14 +23,14 @@
           {
             key:'map',
             title: 'Map',
-            icon: './assets/map-marker.svg',
+            icon: './src/assets/map-marker.svg',
             alt: 'Map Icon',
             link: '/',
           },
           {
             key:'profile',
             title: 'Profile',
-            icon: './assets/user.svg',
+            icon: './src/assets/user.svg',
             alt: 'Profile Icon',
             link: 'profile',
           },
