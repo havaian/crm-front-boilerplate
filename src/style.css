@@ -99,9 +99,13 @@ body {
   margin-right: -5%;
 }
 
-#popup-content input,
+#popup-content input {
+  max-width: 100%;
+  padding-left: 2%;
+}
+
 #popup-content textarea {
-  width: 100%;
+  min-width: 100%;
   padding-left: 2%;
 }
 
