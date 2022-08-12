@@ -11,41 +11,48 @@
         name: "Map",
         
         mounted() {
-
+            // Function for dynamically changing the label of the current page
             for (var x = 0; x < document.querySelector('.active.exact-active').attributes.length; x++) {
                 if (document.querySelector('.active.exact-active').attributes[x].name == 'modelvalue') {
                     document.querySelector('#page-title').innerHTML = '';
                     document.querySelector('#page-title').append(document.querySelector('.active.exact-active').attributes[x].nodeValue);
                 }
             }
-
+            // Initializing map
             const map = L.map('map', {
                 drawControl: false,
             }).setView([41.31, 69.28], 16);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
             }).addTo(map);
-
+            // Variable for saving single layer data
             var layer;
+            // Variable for saving all layers data
             var allLayers;
-
+            // Variable for saving popup content
             var popupContent;
-
+            // Variable for saving area data
             var area;
+            // Variable for saving polygon data
             var polygon;
+            // Variable for saving geometry data
             var geometry;
-
+            // Variable for saving DrawControl data
             var drawControl;
+            // Variable for saving options for DrawControl
             var drawOptions;
-
+            // Variable for saving latitude & longitute data
             var latlngs;
-            var polygon;
 
+            // Creating a FeatureGroup for drawn items & adding it to map
             var drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
+
+            // Creating a FeatureGroup for edited items & adding it to map
             var editItems = new L.FeatureGroup();
             map.addLayer(editItems);
 
+            // Function for defining options for DrawControl
             const defineDrawOptions = (options) => {
                 drawOptions = {
                     position: 'topright',
@@ -73,6 +80,7 @@
                 }
             }
 
+            // Function for loading DrawControl (idk why I called it reload, bc it both load and reloads the DrawControl)
             const reloadDrawControl = (events, options) => {
                 if (events === 'initial') {
                     defineDrawOptions(options);
@@ -86,6 +94,7 @@
                 }
             }
 
+            // Function for area calculation
             const findArea = (layer) => {
                 var objects = layer.getLatLngs()[0];
                 geometry = [[]];
@@ -106,6 +115,7 @@
                 area = turf.area(polygon) / 10000;
             }
 
+            // Function for loading popups
             const loadPopup = (events, layer) => {
             
                 if (events === 'created') {
@@ -148,19 +158,9 @@
                         if (data.properties['name'] != null && 
                             data.properties['area'] != null && 
                             data.properties['description'] != null) {
-                                axios.post('/api/add-building', data)
-                                .then(function (response) {
-                                    // handle success
-                                    console.log(response);
-                                    fireAlert('Building created successfully!');
-                                })
-                                .catch(function (error) {
-                                    // handle error
-                                    console.log(error);
-                                    fireAlert('Some thing went wrong while creating the buliding!');
-                                });
+                                createBuilding(data);
                         } else {
-                            fireAlert('Some fields remain not filled!');
+                            fireAlert('Please, fill in all the fields!');
                         }
                         
                     });
@@ -242,27 +242,16 @@
                         if (data.properties['name'] != null && 
                             data.properties['area'] != null && 
                             data.properties['description'] != null) {
-                                axios.post('/api/update-building/' + id, data)
-                                .then(function (response) {
-                                    // handle success
-                                    console.log(response);
-                                    fireAlert('Building updated successfully!');
-                                })
-                                .catch(function (error) {
-                                    // handle error
-                                    console.log(error);
-                                    fireAlert('Some thing went wrong while updating the building!');
-                                });
-                                editItems.clearLayers();
-                                getAllBuildings();
+                                updateBuilding(data, id);
                         } else {
-                            fireAlert('Some fields remain not filled!');
+                            fireAlert('Please, fill in all the fields!');
                         }
                     });
                 }
 
             }
 
+            // Function for firing alerts
             const fireAlert = (message) => {
                 Swal.fire({
                     icon: 'success',
@@ -272,6 +261,7 @@
                 })
             }
 
+            // Getting all buildnigs from DB and diplaying them on map
             const getAllBuildings = () => {
                 axios.get('/api/get-all-buildings')
                 .then(function (response) {
@@ -315,15 +305,52 @@
                 });
             };
             
+            // Defining options for DrawControl
             var options = {
                 can_draw: true, 
                 can_edit: true, 
                 can_delete: true,
                 operatingLayer: drawnItems,
             }
+
             reloadDrawControl('initial', options);
             getAllBuildings();
 
+            // Wrapper function for axios method of creating buildings
+            const createBuilding = (data) => {
+                axios.post('/api/add-building', data)
+                .then(function (response) {
+                    // handle success
+                    console.log(response);
+                    fireAlert('Building created successfully!');
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                    fireAlert('Some thing went wrong while creating the buliding!');
+                });
+                drawnItems.clearLayers();
+                getAllBuildings();
+            }
+
+            // Wrapper function for axios method of updating buildings
+            const updateBuilding = (data, id) => {
+                axios.post('/api/update-building/' + id, data)
+                .then(function (response) {
+                    // handle success
+                    console.log(response);
+                    fireAlert('Building updated successfully!');
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                    fireAlert('Some thing went wrong while updating the building!');
+                });
+                editItems.clearLayers();
+                getAllBuildings();
+            }
+
+            // Map event for creating layers
             map.on("draw:created", (e) => {
 
                 var options = {
@@ -341,7 +368,8 @@
                 loadPopup('created', layer);
             
             });
-
+            
+            // Map event for editing layers
             map.on("draw:edited", (e) => {
 
                 var options = {
@@ -357,7 +385,8 @@
                 loadPopup('edited', layer);
             
             });
-
+            
+            // Map event for deleting layers
             map.on("draw:deleted", (e) => {
 
                 // var options = {

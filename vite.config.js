@@ -6,23 +6,12 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
-      // string shorthand
-      // '/api': 'http://localhost:8080',
-      // with options
       '/api': {
-        target: 'https://localhost:8080',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
-      },
-      // Using the proxy instance
-      // '/api': {
-      //   target: 'http://localhost:8080',
-      //   changeOrigin: true,
-      //   configure: (proxy, options) => {
-      //     // proxy will be an instance of 'http-proxy'
-      //   }
-      // },
+      }
     }
   }
 });
