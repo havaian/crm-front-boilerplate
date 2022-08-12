@@ -4,6 +4,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  
+  font-family: 'Montserrat' ,sans-serif;
 }
 
 html {
@@ -62,8 +64,6 @@ body {
 /* WRAPPER DIV FOR EVERY PAGE */
 #wrapper {
   padding: 3% 5% 5% 5%;
-
-  font-family: 'Montserrat' ,sans-serif;
 }
 
 .nav-icon {
@@ -93,6 +93,12 @@ body {
   align-self: center;
   justify-self: center;
   transform: rotate(-90deg);
+}
+
+#created-table,
+#generated-table {
+  min-width: 200px;
+  min-height: 100px;
 }
 
 #popup-content label {
