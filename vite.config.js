@@ -10,7 +10,7 @@ export default defineConfig({
       // '/api': 'http://localhost:8080',
       // with options
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'https://starlit-swan-172e45.netlify.app',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
