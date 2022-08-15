@@ -10,6 +10,7 @@
     data() {
     },
     mounted() {
+      // Function for dynamically changing the label of the current page
       for (let x = 0; x < document.querySelector('.active.exact-active').attributes.length; x++) {
         if (document.querySelector('.active.exact-active').attributes[x].name == 'modelvalue') {
           document.querySelector('#page-title').innerHTML = '';
