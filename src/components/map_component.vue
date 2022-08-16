@@ -156,11 +156,14 @@
                             'description': $('input[name="description"]').val()
                         }
                         if (data.properties['name'] != null && 
+                            data.properties['name'].length != 0 && 
                             data.properties['area'] != null && 
-                            data.properties['description'] != null) {
+                            data.properties['area'].length != 0 && 
+                            data.properties['description'] != null &&
+                            data.properties['description'].length != 0) {
                                 createBuilding(data);
                         } else {
-                            fireAlert('Please, fill in all the fields!');
+                            fireAlert('Please, fill in all the fields!', 'error');
                         }
                         
                     });
@@ -240,11 +243,14 @@
                             'description': $('input[name="description"]').val(),
                         }
                         if (data.properties['name'] != null && 
+                            data.properties['name'].length != 0 && 
                             data.properties['area'] != null && 
-                            data.properties['description'] != null) {
+                            data.properties['area'].length != 0 && 
+                            data.properties['description'] != null &&
+                            data.properties['description'].length != 0) {
                                 updateBuilding(data, id);
                         } else {
-                            fireAlert('Please, fill in all the fields!');
+                            fireAlert('Please, fill in all the fields!', 'error');
                         }
                     });
                 }
@@ -252,9 +258,9 @@
             }
 
             // Function for firing alerts
-            const fireAlert = (message) => {
+            const fireAlert = (message, icon) => {
                 Swal.fire({
-                    icon: 'success',
+                    icon: icon,
                     title: message,
                     showConfirmButton: false,
                     timer: 1500
@@ -322,12 +328,12 @@
                 .then(function (response) {
                     // handle success
                     console.log(response);
-                    fireAlert('Building created successfully!');
+                    fireAlert('Building created successfully!', 'success');
                 })
                 .catch(function (error) {
                     // handle error
                     console.log(error);
-                    fireAlert('Some thing went wrong while creating the buliding!');
+                    fireAlert('Some thing went wrong while creating the buliding!', 'error');
                 });
                 drawnItems.clearLayers();
                 getAllBuildings();
@@ -339,12 +345,12 @@
                 .then(function (response) {
                     // handle success
                     console.log(response);
-                    fireAlert('Building updated successfully!');
+                    fireAlert('Building updated successfully!', 'success');
                 })
                 .catch(function (error) {
                     // handle error
                     console.log(error);
-                    fireAlert('Some thing went wrong while updating the building!');
+                    fireAlert('Some thing went wrong while updating the building!', 'error');
                 });
                 editItems.clearLayers();
                 getAllBuildings();
