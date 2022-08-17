@@ -11,7 +11,7 @@
         name: "Map",
         
         mounted() {
-            const baseURL = 'https://construction-map-backend-api.herokuapp.com/';
+            const baseURL = 'https://constructions-map-server.havaian.repl.co/';
 
             // Function for dynamically changing the label of the current page
             for (var x = 0; x < document.querySelector('.active.exact-active').attributes.length; x++) {
