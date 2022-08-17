@@ -9,7 +9,7 @@ export default defineConfig({
       '/api': {
         target: 'https://construction-map-backend-api.herokuapp.com/',
         changeOrigin: true,
-        secure: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
