@@ -162,6 +162,7 @@
                             data.properties['description'] != null &&
                             data.properties['description'].length != 0) {
                                 createBuilding(data);
+                                layer.closePopup();
                         } else {
                             fireAlert('Please, fill in all the fields!', 'error');
                         }
@@ -249,6 +250,7 @@
                             data.properties['description'] != null &&
                             data.properties['description'].length != 0) {
                                 updateBuilding(data, id);
+                                layer.closePopup();
                         } else {
                             fireAlert('Please, fill in all the fields!', 'error');
                         }
@@ -272,7 +274,8 @@
                 axios.get('/api/get-all-buildings')
                 .then(function (response) {
                     allLayers = response.data;
-                    for (var i in Object.keys(response.data)) {
+                    console.log(allLayers);
+                    for (var i in Object.keys(allLayers)) {
                         layer = response.data[i];
                         latlngs = layer.geometry.coordinates[0];
                         polygon = L.polygon(latlngs, {color: '#42C2FF'})
@@ -329,14 +332,14 @@
                     // handle success
                     console.log(response);
                     fireAlert('Building created successfully!', 'success');
+                    drawnItems.clearLayers();
+                    getAllBuildings();
                 })
                 .catch(function (error) {
                     // handle error
                     console.log(error);
                     fireAlert('Some thing went wrong while creating the buliding!', 'error');
                 });
-                drawnItems.clearLayers();
-                getAllBuildings();
             }
 
             // Wrapper function for axios method of updating buildings
@@ -346,14 +349,14 @@
                     // handle success
                     console.log(response);
                     fireAlert('Building updated successfully!', 'success');
+                    drawnItems.clearLayers();
+                    getAllBuildings();
                 })
                 .catch(function (error) {
                     // handle error
                     console.log(error);
                     fireAlert('Some thing went wrong while updating the building!', 'error');
                 });
-                editItems.clearLayers();
-                getAllBuildings();
             }
 
             // Map event for creating layers
