@@ -11,6 +11,8 @@
         name: "Map",
         
         mounted() {
+            const baseURL = 'https://construction-map-backend-api.herokuapp.com/';
+
             // Function for dynamically changing the label of the current page
             for (var x = 0; x < document.querySelector('.active.exact-active').attributes.length; x++) {
                 if (document.querySelector('.active.exact-active').attributes[x].name == 'modelvalue') {
@@ -271,7 +273,7 @@
 
             // Getting all buildnigs from DB and diplaying them on map
             const getAllBuildings = () => {
-                axios.get('/api/get-all-buildings')
+                axios.get(baseURL + 'get-all-buildings')
                 .then(function (response) {
                     allLayers = response.data;
                     console.log(allLayers);
