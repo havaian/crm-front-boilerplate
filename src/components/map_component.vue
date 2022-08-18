@@ -12,7 +12,7 @@
         
         mounted() {
 
-            const base_url = 'https://constructions-map-server.havaian.repl.co'
+            // const base_url = 'https://constructions-map-server.havaian.repl.co';
 
             // Function for dynamically changing the label of the current page
             for (var x = 0; x < document.querySelector('.active.exact-active').attributes.length; x++) {
@@ -319,7 +319,7 @@
 
             // Getting all buildnigs from DB and diplaying them on map
             const getAllBuildings = () => {
-                axios.get(base_url + '/get-all-buildings')
+                axios.get('/get-all-buildings')
                 .then(function (response) {
                     var states = {
                         features: [],
@@ -397,7 +397,7 @@
 
             // Wrapper function for axios method of creating buildings
             const createBuilding = (data) => {
-                axios.post(base_url + '/add-building', data)
+                axios.post('/add-building', data)
                 .then(function (response) {
                     // handle success
                     fireAlert('Building created successfully!', 'success');
@@ -413,7 +413,7 @@
 
             // Wrapper function for axios method of updating buildings
             const updateBuilding = (data, id) => {
-                axios.post(base_url + '/update-building/' + id, data)
+                axios.post('/update-building/' + id, data)
                 .then(function (response) {
                     // handle success
                     fireAlert('Building updated successfully!', 'success');
@@ -428,7 +428,7 @@
             }
 
             const deleteBuilding = (id) => {
-                axios.post(base_url + '/delete-building/' + id)
+                axios.post('/delete-building/' + id)
                 .then(function (response) {
                     // handle success
                     fireAlert('Building deleted successfully!', 'success');
