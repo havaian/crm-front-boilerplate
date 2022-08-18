@@ -28,26 +28,38 @@
             }).addTo(map);
             // Variable for saving single layer data
             var layer;
+            
             // Variable for saving all layers data
             var allLayers;
+            
             // Variable for saving popup content
             var popupContent;
+            
             // Variable for saving area data
             var area;
+            
             // Variable for saving polygon data
             var polygon;
+            
             // Variable for saving geometry data
             var geometry;
+            
             // Variable for saving DrawControl data
             var drawControl;
+            
             // Variable for saving options for DrawControl
             var drawOptions;
+            
             // Variable for saving latitude & longitute data
             var latlngs;
             var Layer;
-
+            
+            // Variable for preventing new layers from clicking
             var layerClickPrevent = false;
-
+            
+            // Variable for saving data to
+            var data
+            
             // Creating a FeatureGroup for drawn items & adding it to map
             var drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
@@ -99,24 +111,46 @@
             }
 
             // Function for area calculation
-            const findArea = (layer) => {
-                var objects = layer.getLatLngs()[0];
-                geometry = [[]];
-                var first = "";
-                for (var i = 0; i < objects.length; i++) {
-                    if (i == 0) {
-                        first = new L.latLng(objects[i].lat, objects[i].lng)
-                    };
+            const findArea = (layer, events) => {
+                if (events === 'created') {
+                    var objects = layer.getLatLngs()[0];
+                    geometry = [[]];
+                    var first = "";
+                    for (var i = 0; i < objects.length; i++) {
+                        if (i == 0) {
+                            first = new L.latLng(objects[i].lat, objects[i].lng)
+                        };
 
-                    var latlng = new L.latLng(objects[i].lat, objects[i].lng);
-                    var point = latlng;
+                        var latlng = new L.latLng(objects[i].lat, objects[i].lng);
+                        var point = latlng;
 
-                    geometry[0].push([point['lng'], point['lat']]);
+                        geometry[0].push([point['lng'], point['lat']]);
+                    }
+                    geometry[0].push([first['lng'], first['lat']]);
+
+                    polygon = turf.polygon(geometry);
+                    area = turf.area(polygon) / 10000;
+                } else if (events === 'edited') {
+                    var objects = layer.getLatLngs()[0];
+                    geometry = [[]];
+                    var first = "";
+                    for (var i = 0; i < objects.length; i++) {
+                        if (i == 0) {
+                            first = new L.latLng(objects[i].lat, objects[i].lng)
+                        };
+
+                        var latlng = new L.latLng(objects[i].lat, objects[i].lng);
+                        var point = latlng;
+
+                        geometry[0].push([point['lng'], point['lat']]);
+                    }
+                    geometry[0].push([first['lng'], first['lat']]);
+
+                    polygon = turf.polygon(geometry);
+
+                    layer.feature.geometry = geometry;
+                    layer.feature.properties.area = turf.area(polygon) / 10000;
                 }
-                geometry[0].push([first['lng'], first['lat']]);
-
-                polygon = turf.polygon(geometry);
-                area = turf.area(polygon) / 10000;
             }
 
             // Function for loading popups
@@ -153,7 +187,7 @@
                     });
 
                     $('#save-button').click(() => {
-                        var data = polygon;
+                        data = polygon;
                         data.properties = {
                             'name': $('input[name="name"]').val(),
                             'area': $('input[name="area"]').val(),
@@ -165,6 +199,7 @@
                             data.properties['area'].length != 0 && 
                             data.properties['description'] != null &&
                             data.properties['description'].length != 0) {
+                                // console.log(data);
                                 createBuilding(data);
                                 layer.closePopup();
                         } else {
@@ -174,7 +209,7 @@
                     });
 
                 } else if (events === 'generated') {
-                    var data = layer.properties;
+                    data = layer.feature.properties;
                     return popupContent = `
                         <div id="popup-content">
                             <table id="generated-table">
@@ -195,8 +230,8 @@
                     `;
                 } else if (events === 'edited') {
 
-                    var res_data = layer.feature;
-                    var id = res_data._id;
+                    data = layer.feature;
+                    var id = data.id;
 
                     layer.unbindPopup();
 
@@ -205,15 +240,15 @@
                         <table id="created-table">
                             <tr>
                                 <td><label for="name" class="label-name"></label><span class="content-name">Name</span></td>
-                                <td><input name="name" type="text" value="${res_data.properties.name}" required></td>
+                                <td><input name="name" type="text" value="${data.properties.name}" required></td>
                             </tr>
                             <tr>
                                 <td><label for="area" class="label-name"></label><span class="content-name">Area (ha)</span></td>
-                                <td><input name="area" type="number" value="${res_data.properties.area}" required disabled></td>
+                                <td><input name="area" type="number" value="${data.properties.area.toFixed(2)}" required disabled></td>
                             </tr>
                             <tr>
                                 <td><label for="description"></label><span class="content-name">Description</span></td>
-                                <td><input name="description" type="text" value="${res_data.properties.description}" required></td>
+                                <td><input name="description" type="text" value="${data.properties.description}" required></td>
                             </tr>
                         </table>
                         <div id="save-layer">
@@ -241,6 +276,7 @@
                     });
 
                     $('#save-button').click(() => {
+                        data = polygon;
                         data.properties = {
                             'name': $('input[name="name"]').val(),
                             'area': $('input[name="area"]').val(),
@@ -252,6 +288,7 @@
                             data.properties['area'].length != 0 && 
                             data.properties['description'] != null &&
                             data.properties['description'].length != 0) {
+                                console.log(polygon);
                                 updateBuilding(data, id);
                                 layer.closePopup();
                         } else {
@@ -288,7 +325,7 @@
                             "properties": layer.properties,
                             "geometry": layer.geometry
                         }
-                        state.properties.popupContent = loadPopup('generated', layer);
+                        state.id = layer._id;
                         states.features.push(state);
                     }
                     Layer = L.geoJSON(states, {
@@ -297,8 +334,6 @@
                                 color: '#42C2FF'
                             });
                                 layer.on('click', (e) => {
-                                    console.log('click');
-                                    console.log(layer.feature.properties.area);
                                     if (layerClickPrevent === true) {
                                         editItems.clearLayers();
                                         getAllBuildings();
@@ -336,7 +371,7 @@
                                 });
                         }
                     }).bindPopup(function (layer) {
-                        return layer.feature.properties.popupContent;
+                        return popupContent = loadPopup('generated', layer);
                     }).addTo(map);
                 })
                 .catch(function (error) {
@@ -416,7 +451,7 @@
                 layer = e.layer;
                 drawnItems.addLayer(layer);
 
-                findArea(layer);
+                findArea(layer, 'created');
                 loadPopup('created', layer);
             
             });
@@ -425,12 +460,8 @@
             map.on("draw:edited", (e) => {
                 
                 e.layers._layers = Object.values(editItems._layers);
-                console.log(e);
-                for (let x = 0; x < Object.keys(editItems._layers).length; x++) {
-                    layer = Object.values(editItems._layers)[x];
-                    findArea(layer);
-                    console.log(layer.feature.properties.area);
-                }
+                layer = Object.values(editItems._layers)[0];
+                findArea(layer, 'edited');
                 loadPopup('edited', layer);
             
             });
