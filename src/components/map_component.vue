@@ -317,7 +317,7 @@
 
             // Getting all buildnigs from DB and diplaying them on map
             const getAllBuildings = () => {
-                axios.get('/api/get-all-buildings')
+                axios.get('https://constructions-map-server.havaian.repl.co/get-all-buildings')
                 .then(function (response) {
                     var states = {
                         features: [],
