@@ -7,9 +7,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://construction-map-backend-api.herokuapp.com/',
+        target: 'https://constructions-map-server.havaian.repl.co/',
         changeOrigin: true,
-        secure: false,
+        secure: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
