@@ -319,6 +319,7 @@
 
             // Getting all buildnigs from DB and diplaying them on map
             const getAllBuildings = () => {
+            
                 axios.get('/get-all-buildings')
                 .then(function (response) {
                     var states = {
