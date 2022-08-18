@@ -11,7 +11,6 @@
         name: "Map",
         
         mounted() {
-            const baseURL = 'https://constructions-map-server.havaian.repl.co/';
 
             // Function for dynamically changing the label of the current page
             for (var x = 0; x < document.querySelector('.active.exact-active').attributes.length; x++) {
@@ -29,23 +28,44 @@
             }).addTo(map);
             // Variable for saving single layer data
             var layer;
+            
             // Variable for saving all layers data
             var allLayers;
+            
             // Variable for saving popup content
             var popupContent;
+            
             // Variable for saving area data
             var area;
+            
             // Variable for saving polygon data
             var polygon;
+            
             // Variable for saving geometry data
             var geometry;
+            
             // Variable for saving DrawControl data
             var drawControl;
+            
             // Variable for saving options for DrawControl
             var drawOptions;
+            
             // Variable for saving latitude & longitute data
             var latlngs;
-
+            var Layer;
+            
+            // Variable for preventing new layers from clicking
+            var layerClickPrevent = false;
+            
+            // Variable for checking status of delete operations
+            var deleteStartStatus = false;
+            
+            // Variable for checking status of edit operations
+            var editStartStatus = false;
+            
+            // Variable for saving data to
+            var data
+            
             // Creating a FeatureGroup for drawn items & adding it to map
             var drawnItems = new L.FeatureGroup();
             map.addLayer(drawnItems);
@@ -97,24 +117,46 @@
             }
 
             // Function for area calculation
-            const findArea = (layer) => {
-                var objects = layer.getLatLngs()[0];
-                geometry = [[]];
-                var first = "";
-                for (var i = 0; i < objects.length; i++) {
-                    if (i == 0) {
-                        first = new L.latLng(objects[i].lng, objects[i].lat)
-                    };
+            const findArea = (layer, events) => {
+                if (events === 'created') {
+                    var objects = layer.getLatLngs()[0];
+                    geometry = [[]];
+                    var first = "";
+                    for (var i = 0; i < objects.length; i++) {
+                        if (i == 0) {
+                            first = new L.latLng(objects[i].lat, objects[i].lng)
+                        };
 
-                    var latlng = new L.latLng(objects[i].lng, objects[i].lat);
-                    var point = latlng;
+                        var latlng = new L.latLng(objects[i].lat, objects[i].lng);
+                        var point = latlng;
 
-                    geometry[0].push([point['lng'], point['lat']]);
+                        geometry[0].push([point['lng'], point['lat']]);
+                    }
+                    geometry[0].push([first['lng'], first['lat']]);
+
+                    polygon = turf.polygon(geometry);
+                    area = turf.area(polygon) / 10000;
+                } else if (events === 'edited') {
+                    var objects = layer.getLatLngs()[0];
+                    geometry = [[]];
+                    var first = "";
+                    for (var i = 0; i < objects.length; i++) {
+                        if (i == 0) {
+                            first = new L.latLng(objects[i].lat, objects[i].lng)
+                        };
+
+                        var latlng = new L.latLng(objects[i].lat, objects[i].lng);
+                        var point = latlng;
+
+                        geometry[0].push([point['lng'], point['lat']]);
+                    }
+                    geometry[0].push([first['lng'], first['lat']]);
+
+                    polygon = turf.polygon(geometry);
+
+                    layer.feature.geometry = geometry;
+                    layer.feature.properties.area = turf.area(polygon) / 10000;
                 }
-                geometry[0].push([first['lng'], first['lat']]);
-
-                polygon = turf.polygon(geometry);
-                area = turf.area(polygon) / 10000;
             }
 
             // Function for loading popups
@@ -151,7 +193,7 @@
                     });
 
                     $('#save-button').click(() => {
-                        var data = polygon;
+                        data = polygon;
                         data.properties = {
                             'name': $('input[name="name"]').val(),
                             'area': $('input[name="area"]').val(),
@@ -163,6 +205,7 @@
                             data.properties['area'].length != 0 && 
                             data.properties['description'] != null &&
                             data.properties['description'].length != 0) {
+                                // console.log(data);
                                 createBuilding(data);
                                 layer.closePopup();
                         } else {
@@ -172,7 +215,7 @@
                     });
 
                 } else if (events === 'generated') {
-                    var data = layer.properties;
+                    data = layer.feature.properties;
                     return popupContent = `
                         <div id="popup-content">
                             <table id="generated-table">
@@ -193,8 +236,8 @@
                     `;
                 } else if (events === 'edited') {
 
-                    var data = layer.properties;
-                    var id = data._id;
+                    data = layer.feature;
+                    var id = data.id;
 
                     layer.unbindPopup();
 
@@ -207,7 +250,7 @@
                             </tr>
                             <tr>
                                 <td><label for="area" class="label-name"></label><span class="content-name">Area (ha)</span></td>
-                                <td><input name="area" type="number" value="${data.properties.area}" required disabled></td>
+                                <td><input name="area" type="number" value="${data.properties.area.toFixed(2)}" required disabled></td>
                             </tr>
                             <tr>
                                 <td><label for="description"></label><span class="content-name">Description</span></td>
@@ -239,7 +282,7 @@
                     });
 
                     $('#save-button').click(() => {
-                        var data = polygon;
+                        data = polygon;
                         data.properties = {
                             'name': $('input[name="name"]').val(),
                             'area': $('input[name="area"]').val(),
@@ -251,6 +294,7 @@
                             data.properties['area'].length != 0 && 
                             data.properties['description'] != null &&
                             data.properties['description'].length != 0) {
+                                console.log(polygon);
                                 updateBuilding(data, id);
                                 layer.closePopup();
                         } else {
@@ -273,42 +317,64 @@
 
             // Getting all buildnigs from DB and diplaying them on map
             const getAllBuildings = () => {
-                axios.get(baseURL + 'get-all-buildings')
+                axios.get('/api/get-all-buildings')
                 .then(function (response) {
+                    var states = {
+                        features: [],
+                        type: "FeatureCollection"
+                    }
                     allLayers = response.data;
-                    console.log(allLayers);
                     for (var i in Object.keys(allLayers)) {
-                        layer = response.data[i];
-                        latlngs = layer.geometry.coordinates[0];
-                        polygon = L.polygon(latlngs, {color: '#42C2FF'})
-                        polygon.properties = response.data[i];
-                        polygon.addTo(map);
-                        loadPopup('generated', layer);
-                        polygon.bindPopup(popupContent);
-
-                        polygon.on('click', (e) => {
-                            layer = polygon;
-                            editItems.addLayer(polygon);
-                            var options = {
-                                can_draw: false, 
-                                can_edit: true, 
-                                can_delete: true,
-                                operatingLayer: editItems,
-                            }
-                            reloadDrawControl('secondary', options);
-                            $('.leaflet-popup-close-button').click((e) => {
-                                editItems.clearLayers();
-                                var options = {
-                                    can_draw: true, 
-                                    can_edit: true, 
-                                    can_delete: true,
-                                    operatingLayer: drawnItems,
-                                }
-                                reloadDrawControl('secondary', options);
-                                getAllBuildings();
-                            })
-                        });
-                    }                    
+                        layer = allLayers[i];
+                        var state = {
+                            "type": "Feature",
+                            "properties": layer.properties,
+                            "geometry": layer.geometry
+                        }
+                        state.id = layer._id;
+                        states.features.push(state);
+                    }
+                    Layer = L.geoJSON(states, {
+                        onEachFeature: function (feature, layer) {
+                            layer.setStyle({
+                                color: '#42C2FF'
+                            });
+                                layer.on('click', (e) => {
+                                    if (layerClickPrevent === true) {
+                                        // UPDATE CODE HERE
+                                    } else {
+                                        if (deleteStartStatus === 'true') {
+                                            // PDATE CODE HERE TOO
+                                        } else {
+                                            editItems.clearLayers();
+                                            layerClickPrevent = true;
+                                            editItems.addLayer(layer);
+                                            var options = {
+                                                can_draw: false, 
+                                                can_edit: true, 
+                                                can_delete: true,
+                                                operatingLayer: editItems,
+                                            }
+                                            reloadDrawControl('secondary', options);
+                                        }
+                                    }
+                                    $('.leaflet-popup-close-button').click((e) => {
+                                        layerClickPrevent = false;
+                                        editItems.clearLayers();
+                                        getAllBuildings();
+                                        var options = {
+                                            can_draw: true, 
+                                            can_edit: true, 
+                                            can_delete: true,
+                                            operatingLayer: drawnItems,
+                                        }
+                                        reloadDrawControl('secondary', options);
+                                    })
+                                });
+                        }
+                    }).bindPopup(function (layer) {
+                        return popupContent = loadPopup('generated', layer);
+                    }).addTo(map);
                 })
                 .catch(function (error) {
                     // handle error
@@ -332,7 +398,6 @@
                 axios.post('/api/add-building', data)
                 .then(function (response) {
                     // handle success
-                    console.log(response);
                     fireAlert('Building created successfully!', 'success');
                     drawnItems.clearLayers();
                     getAllBuildings();
@@ -349,7 +414,6 @@
                 axios.post('/api/update-building/' + id, data)
                 .then(function (response) {
                     // handle success
-                    console.log(response);
                     fireAlert('Building updated successfully!', 'success');
                     drawnItems.clearLayers();
                     getAllBuildings();
@@ -360,6 +424,35 @@
                     fireAlert('Some thing went wrong while updating the building!', 'error');
                 });
             }
+
+            const deleteBuilding = (id) => {
+                axios.post('/api/delete-building/' + id)
+                .then(function (response) {
+                    // handle success
+                    fireAlert('Building deleted successfully!', 'success');
+                    drawnItems.clearLayers();
+                    getAllBuildings();
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                    fireAlert('Some thing went wrong while deleting the building!', 'error');
+                });
+            }
+
+            // const editBuildingStop = () => {
+                // layerClickPrevent = false;
+                // Layer.clearLayers();
+                // editItems.clearLayers();
+                // getAllBuildings();
+                // var options = {
+                //     can_draw: true, 
+                //     can_edit: true, 
+                //     can_delete: true,
+                //     operatingLayer: drawnItems,
+                // }
+                // reloadDrawControl('secondary', options);
+            // }
 
             // Map event for creating layers
             map.on("draw:created", (e) => {
@@ -375,40 +468,46 @@
                 layer = e.layer;
                 drawnItems.addLayer(layer);
 
-                findArea(layer);
+                findArea(layer, 'created');
                 loadPopup('created', layer);
             
             });
             
             // Map event for editing layers
             map.on("draw:edited", (e) => {
-
-                var options = {
-                    can_draw: false, 
-                    can_edit: true, 
-                    can_delete: true,
-                    operatingLayer: editItems,
-                }
-                reloadDrawControl('secondary', options);
-
-                findArea(layer);
-
+                
+                e.layers._layers = Object.values(editItems._layers);
+                layer = Object.values(editItems._layers)[0];
+                findArea(layer, 'edited');
                 loadPopup('edited', layer);
             
             });
             
+            // Map event for editing stopped
+            // map.on("draw:editstop", (e) => {
+            //     editBuildingStop(e);
+            // })
+
+            // Map event for starting deleting layers
+            // map.on("draw:deletestart", (e) => {
+
+            //     deleteStartStatus = true;
+
+            //     // var options = {
+            //     //     can_draw: true, 
+            //     //     can_edit: true, 
+            //     //     can_delete: true,
+            //     //     operatingLayer: drawnItems,
+            //     // }
+            //     // reloadDrawControl('secondary', options);
+
+            // });
+            
             // Map event for deleting layers
             map.on("draw:deleted", (e) => {
 
-                // var options = {
-                //     can_draw: true, 
-                //     can_edit: true, 
-                //     can_delete: true,
-                //     operatingLayer: drawnItems,
-                // }
-                // reloadDrawControl('secondary', options);
-
-                console.log(polygon);
+                var id = Object.values(e.layers._layers)[0].feature.id;
+                deleteBuilding(id);
 
             });
 
