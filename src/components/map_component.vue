@@ -11,7 +11,6 @@
         name: "Map",
         
         mounted() {
-            const baseURL = 'https://constructions-map-server.havaian.repl.co/';
 
             // Function for dynamically changing the label of the current page
             for (var x = 0; x < document.querySelector('.active.exact-active').attributes.length; x++) {
@@ -45,6 +44,9 @@
             var drawOptions;
             // Variable for saving latitude & longitute data
             var latlngs;
+            var Layer;
+
+            var layerClickPrevent = false;
 
             // Creating a FeatureGroup for drawn items & adding it to map
             var drawnItems = new L.FeatureGroup();
@@ -103,10 +105,10 @@
                 var first = "";
                 for (var i = 0; i < objects.length; i++) {
                     if (i == 0) {
-                        first = new L.latLng(objects[i].lng, objects[i].lat)
+                        first = new L.latLng(objects[i].lat, objects[i].lng)
                     };
 
-                    var latlng = new L.latLng(objects[i].lng, objects[i].lat);
+                    var latlng = new L.latLng(objects[i].lat, objects[i].lng);
                     var point = latlng;
 
                     geometry[0].push([point['lng'], point['lat']]);
@@ -193,8 +195,8 @@
                     `;
                 } else if (events === 'edited') {
 
-                    var data = layer.properties;
-                    var id = data._id;
+                    var res_data = layer.feature;
+                    var id = res_data._id;
 
                     layer.unbindPopup();
 
@@ -203,15 +205,15 @@
                         <table id="created-table">
                             <tr>
                                 <td><label for="name" class="label-name"></label><span class="content-name">Name</span></td>
-                                <td><input name="name" type="text" value="${data.properties.name}" required></td>
+                                <td><input name="name" type="text" value="${res_data.properties.name}" required></td>
                             </tr>
                             <tr>
                                 <td><label for="area" class="label-name"></label><span class="content-name">Area (ha)</span></td>
-                                <td><input name="area" type="number" value="${data.properties.area}" required disabled></td>
+                                <td><input name="area" type="number" value="${res_data.properties.area}" required disabled></td>
                             </tr>
                             <tr>
                                 <td><label for="description"></label><span class="content-name">Description</span></td>
-                                <td><input name="description" type="text" value="${data.properties.description}" required></td>
+                                <td><input name="description" type="text" value="${res_data.properties.description}" required></td>
                             </tr>
                         </table>
                         <div id="save-layer">
@@ -239,7 +241,6 @@
                     });
 
                     $('#save-button').click(() => {
-                        var data = polygon;
                         data.properties = {
                             'name': $('input[name="name"]').val(),
                             'area': $('input[name="area"]').val(),
@@ -273,42 +274,70 @@
 
             // Getting all buildnigs from DB and diplaying them on map
             const getAllBuildings = () => {
-                axios.get(baseURL + 'get-all-buildings')
+                axios.get('/api/get-all-buildings')
                 .then(function (response) {
+                    var states = {
+                        features: [],
+                        type: "FeatureCollection"
+                    }
                     allLayers = response.data;
-                    console.log(allLayers);
                     for (var i in Object.keys(allLayers)) {
-                        layer = response.data[i];
-                        latlngs = layer.geometry.coordinates[0];
-                        polygon = L.polygon(latlngs, {color: '#42C2FF'})
-                        polygon.properties = response.data[i];
-                        polygon.addTo(map);
-                        loadPopup('generated', layer);
-                        polygon.bindPopup(popupContent);
-
-                        polygon.on('click', (e) => {
-                            layer = polygon;
-                            editItems.addLayer(polygon);
-                            var options = {
-                                can_draw: false, 
-                                can_edit: true, 
-                                can_delete: true,
-                                operatingLayer: editItems,
-                            }
-                            reloadDrawControl('secondary', options);
-                            $('.leaflet-popup-close-button').click((e) => {
-                                editItems.clearLayers();
-                                var options = {
-                                    can_draw: true, 
-                                    can_edit: true, 
-                                    can_delete: true,
-                                    operatingLayer: drawnItems,
-                                }
-                                reloadDrawControl('secondary', options);
-                                getAllBuildings();
-                            })
-                        });
-                    }                    
+                        layer = allLayers[i];
+                        var state = {
+                            "type": "Feature",
+                            "properties": layer.properties,
+                            "geometry": layer.geometry
+                        }
+                        state.properties.popupContent = loadPopup('generated', layer);
+                        states.features.push(state);
+                    }
+                    Layer = L.geoJSON(states, {
+                        onEachFeature: function (feature, layer) {
+                            layer.setStyle({
+                                color: '#42C2FF'
+                            });
+                                layer.on('click', (e) => {
+                                    console.log('click');
+                                    console.log(layer.feature.properties.area);
+                                    if (layerClickPrevent === true) {
+                                        editItems.clearLayers();
+                                        getAllBuildings();
+                                        var options = {
+                                            can_draw: false, 
+                                            can_edit: true, 
+                                            can_delete: true,
+                                            operatingLayer: editItems,
+                                        }
+                                        reloadDrawControl('secondary', options);
+                                    } else {
+                                        editItems.clearLayers();
+                                        layerClickPrevent = true;
+                                        editItems.addLayer(layer);
+                                        var options = {
+                                            can_draw: false, 
+                                            can_edit: true, 
+                                            can_delete: true,
+                                            operatingLayer: editItems,
+                                        }
+                                        reloadDrawControl('secondary', options);
+                                    }
+                                    $('.leaflet-popup-close-button').click((e) => {
+                                        layerClickPrevent = false;
+                                        editItems.clearLayers();
+                                        getAllBuildings();
+                                        var options = {
+                                            can_draw: true, 
+                                            can_edit: true, 
+                                            can_delete: true,
+                                            operatingLayer: drawnItems,
+                                        }
+                                        reloadDrawControl('secondary', options);
+                                    })
+                                });
+                        }
+                    }).bindPopup(function (layer) {
+                        return layer.feature.properties.popupContent;
+                    }).addTo(map);
                 })
                 .catch(function (error) {
                     // handle error
@@ -332,7 +361,6 @@
                 axios.post('/api/add-building', data)
                 .then(function (response) {
                     // handle success
-                    console.log(response);
                     fireAlert('Building created successfully!', 'success');
                     drawnItems.clearLayers();
                     getAllBuildings();
@@ -349,7 +377,6 @@
                 axios.post('/api/update-building/' + id, data)
                 .then(function (response) {
                     // handle success
-                    console.log(response);
                     fireAlert('Building updated successfully!', 'success');
                     drawnItems.clearLayers();
                     getAllBuildings();
@@ -360,6 +387,20 @@
                     fireAlert('Some thing went wrong while updating the building!', 'error');
                 });
             }
+
+            // const editBuildingStop = () => {
+                // layerClickPrevent = false;
+                // Layer.clearLayers();
+                // editItems.clearLayers();
+                // getAllBuildings();
+                // var options = {
+                //     can_draw: true, 
+                //     can_edit: true, 
+                //     can_delete: true,
+                //     operatingLayer: drawnItems,
+                // }
+                // reloadDrawControl('secondary', options);
+            // }
 
             // Map event for creating layers
             map.on("draw:created", (e) => {
@@ -382,20 +423,22 @@
             
             // Map event for editing layers
             map.on("draw:edited", (e) => {
-
-                var options = {
-                    can_draw: false, 
-                    can_edit: true, 
-                    can_delete: true,
-                    operatingLayer: editItems,
+                
+                e.layers._layers = Object.values(editItems._layers);
+                console.log(e);
+                for (let x = 0; x < Object.keys(editItems._layers).length; x++) {
+                    layer = Object.values(editItems._layers)[x];
+                    findArea(layer);
+                    console.log(layer.feature.properties.area);
                 }
-                reloadDrawControl('secondary', options);
-
-                findArea(layer);
-
                 loadPopup('edited', layer);
             
             });
+            
+            // Map event for editing stopped
+            // map.on("draw:editstop", (e) => {
+            //     editBuildingStop(e);
+            // })
             
             // Map event for deleting layers
             map.on("draw:deleted", (e) => {
