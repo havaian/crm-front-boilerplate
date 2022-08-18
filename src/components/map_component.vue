@@ -57,6 +57,12 @@
             // Variable for preventing new layers from clicking
             var layerClickPrevent = false;
             
+            // Variable for checking status of delete operations
+            var deleteStartStatus = false;
+            
+            // Variable for checking status of edit operations
+            var editStartStatus = false;
+            
             // Variable for saving data to
             var data
             
@@ -335,26 +341,22 @@
                             });
                                 layer.on('click', (e) => {
                                     if (layerClickPrevent === true) {
-                                        editItems.clearLayers();
-                                        getAllBuildings();
-                                        var options = {
-                                            can_draw: false, 
-                                            can_edit: true, 
-                                            can_delete: true,
-                                            operatingLayer: editItems,
-                                        }
-                                        reloadDrawControl('secondary', options);
+                                        // UPDATE CODE HERE
                                     } else {
-                                        editItems.clearLayers();
-                                        layerClickPrevent = true;
-                                        editItems.addLayer(layer);
-                                        var options = {
-                                            can_draw: false, 
-                                            can_edit: true, 
-                                            can_delete: true,
-                                            operatingLayer: editItems,
+                                        if (deleteStartStatus === 'true') {
+                                            // PDATE CODE HERE TOO
+                                        } else {
+                                            editItems.clearLayers();
+                                            layerClickPrevent = true;
+                                            editItems.addLayer(layer);
+                                            var options = {
+                                                can_draw: false, 
+                                                can_edit: true, 
+                                                can_delete: true,
+                                                operatingLayer: editItems,
+                                            }
+                                            reloadDrawControl('secondary', options);
                                         }
-                                        reloadDrawControl('secondary', options);
                                     }
                                     $('.leaflet-popup-close-button').click((e) => {
                                         layerClickPrevent = false;
@@ -423,6 +425,21 @@
                 });
             }
 
+            const deleteBuilding = (id) => {
+                axios.post('/api/delete-building/' + id)
+                .then(function (response) {
+                    // handle success
+                    fireAlert('Building deleted successfully!', 'success');
+                    drawnItems.clearLayers();
+                    getAllBuildings();
+                })
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                    fireAlert('Some thing went wrong while deleting the building!', 'error');
+                });
+            }
+
             // const editBuildingStop = () => {
                 // layerClickPrevent = false;
                 // Layer.clearLayers();
@@ -470,19 +487,27 @@
             // map.on("draw:editstop", (e) => {
             //     editBuildingStop(e);
             // })
+
+            // Map event for starting deleting layers
+            // map.on("draw:deletestart", (e) => {
+
+            //     deleteStartStatus = true;
+
+            //     // var options = {
+            //     //     can_draw: true, 
+            //     //     can_edit: true, 
+            //     //     can_delete: true,
+            //     //     operatingLayer: drawnItems,
+            //     // }
+            //     // reloadDrawControl('secondary', options);
+
+            // });
             
             // Map event for deleting layers
             map.on("draw:deleted", (e) => {
 
-                // var options = {
-                //     can_draw: true, 
-                //     can_edit: true, 
-                //     can_delete: true,
-                //     operatingLayer: drawnItems,
-                // }
-                // reloadDrawControl('secondary', options);
-
-                console.log(polygon);
+                var id = Object.values(e.layers._layers)[0].feature.id;
+                deleteBuilding(id);
 
             });
 
