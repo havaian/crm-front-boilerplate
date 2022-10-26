@@ -1,10 +1,6 @@
-// import map_route_default from './map_route';
-// import map_route_redirect from './map_route';
-// import profile_route_default from '.profile_route';
 import { createRouter, createWebHistory } from 'vue-router';
 import MainComponent from '../components/main_component.vue';
-// import ProfileComponent from '../components/profile_component.vue';
-import ProductComponent from '../components/product_component.vue';
+import SingleComponent from '../components/single_component.vue';
 import EditComponent from '../components/edit_component.vue';
 import AddComponent from '../components/add_component.vue';
 
@@ -18,15 +14,10 @@ const routes = [
         path: '/main',
         redirect: '/',
     },
-    // {
-    //     path: '/profile',
-    //     name: 'Profile',
-    //     component: ProfileComponent
-    // },
     {
-        path: '/product/:id',
-        name: 'Product',
-        component: ProductComponent
+        path: '/single/:id',
+        name: 'Single',
+        component: SingleComponent
     },
     {
         path: '/edit/:id',

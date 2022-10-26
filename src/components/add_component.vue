@@ -44,7 +44,7 @@ export default {
     },
     mounted() {
 
-        let url = 'http://localhost:8080/add-product'
+        let url = import.meta.env.VITE_api_add_single_item_url
 
         $('#add_approve_button').click(() => {
 

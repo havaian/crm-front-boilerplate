@@ -27,13 +27,6 @@
             alt: 'Map Icon',
             link: '/',
           },
-          // {
-          //   key:'profile',
-          //   title: 'Profile',
-          //   icon: '👤',
-          //   alt: 'Profile Icon',
-          //   link: 'profile',
-          // },
         ],
         pageTitle: 'Map'
       };

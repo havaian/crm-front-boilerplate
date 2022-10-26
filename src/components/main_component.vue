@@ -1,7 +1,7 @@
 <template>
     <div class="wrapper">
-        <div class="add_product">
-            <div class="add_product_icon">
+        <div class="add_item">
+            <div class="add_item_icon">
                 ➕
             </div>
         </div>
@@ -27,7 +27,7 @@ export default {
 
         let table_data;
 
-        axios.get('http://localhost:8080/get-all-products')
+        axios.get(import.meta.env.VITE_api_url + import.meta.env.VITE_api_get_all_items_url)
         .then((res) => {
             table_data = res.data;
             let thead_html = `
@@ -49,55 +49,16 @@ export default {
             $('thead').html(thead_html);
             for (let y in res.data) {
                 tbody_html += `
-                    <tr class="product">
-                        <!-- <td><input class='product_checkbox_input' data-value=${res.data[y]['_id']} type="checkbox"></td> -->
+                    <tr class="item">
+                        <!-- <td><input class='item_checkbox_input' data-value=${res.data[y]['_id']} type="checkbox"></td> -->
                         <td class="index-number">${parseInt(y)+1}</td>
                 `
                 for (let x in res.data[y]) {
-                    if (x != '_id' && x != '__v') {
-                        if (x != 'createdAt' && x != 'updatedAt' && x != 'description' && x != 'price') {
-                            tbody_html += `
-                                <td class="${x}">
-                                    ${res.data[y][x]}
-                                </td>  
-                            `;
-                        } else {
-                            if (x === 'description') {
-                                let new_string = res.data[y][x].split('.');
-                                tbody_html += `
-                                    <td class="${x}">
-                                        ${new_string[0] + '...'}
-                                    </td>  
-                                `;
-                            } else if (x === 'price') {
-                                tbody_html += `
-                                    <td class="${x}">
-                                        $${res.data[y][x]}
-                                    </td>  
-                                `;
-                            } else if (x === '_v') {
-                                tbody_html += `
-                                    <td class="${x}">
-                                        <code>${res.data[y][x]}</code>
-                                    </td>
-                                `;
-                            } else if (x === 'createdAt') {
-                                let new_string = new Date(res.data[y][x]).toLocaleString('uz-UZ');
-                                tbody_html += `
-                                    <td class="${x}">
-                                        ${new_string}
-                                    </td>  
-                                `;
-                            } else if (x === 'updatedAt') {
-                                let new_string = new Date(res.data[y][x]).toLocaleString('uz-UZ');
-                                tbody_html += `
-                                    <td class="${x}">
-                                        ${new_string}
-                                    </td>
-                                `;
-                            }
-                        }
-                    }
+                    tbody_html += `
+                        <td class="${x}">
+                            ${res.data[y][x]}
+                        </td>  
+                    `;
                 }
                 tbody_html += `
                         <td data-id=${res.data[y]._id} class="buttons" id="link_button">
@@ -110,34 +71,34 @@ export default {
             }
             $('tbody').html(tbody_html);
 
-            const products = document.querySelectorAll('.product');
+            const items = document.querySelectorAll('.items');
             const link_buttons = document.querySelectorAll('#link_button');
 
-            for (let x = 0; x < products.length; x++) {
-                for (let y = 0; y < products[x].children.length; y++) {
-                    products[x].children[y].addEventListener('click', () => {
-                        window.location.href = '/product/' + link_buttons[x].attributes['data-id'].value;
+            for (let x = 0; x < items.length; x++) {
+                for (let y = 0; y < items[x].children.length; y++) {
+                    items[x].children[y].addEventListener('click', () => {
+                        window.location.href = import.meta.env.VITE_api_get_single_item_url + link_buttons[x].attributes['data-id'].value;
                     });
                 }
             }
 
-            $('.add_product_icon').click(() => {
+            $('.add_item_icon').click(() => {
                 window.location.href = '/add/';
             });
 
-            // let product_array = [];
+            // let item_array = [];
 
             // $('input[type="checkbox"]').change((e) => {
-            //     const product_id = e.target.attributes['data-value'].value;
-            //     console.log(product_id);
-            //     const index = product_array.indexOf(product_id);
+            //     const item_id = e.target.attributes['data-value'].value;
+            //     console.log(item_id);
+            //     const index = item_array.indexOf(item_id);
             //     console.log(index);
-            //     if (product_array.includes(product_id)) {
-            //         product_array.splice(product_id, index);
+            //     if (item_array.includes(item_id)) {
+            //         item_array.splice(item_id, index);
             //     } else {
-            //         product_array.push(product_id);
+            //         item_array.push(item_id);
             //     }
-            //     console.log(product_array);
+            //     console.log(item_array);
             // });
         });
     }
@@ -146,19 +107,19 @@ export default {
 
 <style>
 
-    .add_product {
+    .add_item {
         padding: 1% 1% 1% 0.5%;
         width: 100%;
     }
 
-    .add_product_icon {
+    .add_item_icon {
         mix-blend-mode: difference;
         padding: 1%;
         width: fit-content;
         border: thin solid black;
     }
 
-    .add_product_icon:hover {
+    .add_item_icon:hover {
         background-color: lightgray;
     }
 
