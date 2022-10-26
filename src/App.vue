@@ -3,7 +3,7 @@
         <div class="menu">
             <div class="menu-wrapper">
               <router-link v-for="item in menuItems" :key="item.key" :to="item.link" v-model="item.key">
-                  <img class='nav-icon' :src="item.icon" :alt="item.alt">
+                <span class='nav-icon'>{{item.icon}}</span>
               </router-link>
             </div>
             <div class="page-title-container">
@@ -22,18 +22,18 @@
         menuItems: [
           {
             key:'map',
-            title: 'Map',
-            icon: './assets/map-marker.svg',
+            title: 'Main',
+            icon: '🏠',
             alt: 'Map Icon',
             link: '/',
           },
-          {
-            key:'profile',
-            title: 'Profile',
-            icon: './assets/user.svg',
-            alt: 'Profile Icon',
-            link: 'profile',
-          },
+          // {
+          //   key:'profile',
+          //   title: 'Profile',
+          //   icon: '👤',
+          //   alt: 'Profile Icon',
+          //   link: 'profile',
+          // },
         ],
         pageTitle: 'Map'
       };
@@ -43,6 +43,6 @@
 
 </script>
 
-<style scoped>
+<style>
 
 </style>

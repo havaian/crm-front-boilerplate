@@ -8,6 +8,11 @@
   font-family: 'Montserrat' ,sans-serif;
 }
 
+*::selection {
+  color: white;
+  background-color: rgb(100, 100, 100);
+}
+
 html {
   height: 100%;
 }
@@ -62,60 +67,19 @@ body {
 }
 
 /* WRAPPER DIV FOR EVERY PAGE */
-#wrapper {
+.wrapper {
   padding: 3% 5% 5% 5%;
 }
 
 .nav-icon {
-  height: 30px;
+  font-size: 30px;
 }
 
-.router-link-exact-active {
-  background-color: rgb(226, 226, 226);
+table {
+  margin: 0;
+  width: 100%;
 }
 
-.leaflet-control-attribution a {
-  display: none; 
-}
-
-.page-title-container {
-  position: absolute;
-  max-width: 100%;
-  bottom: 5%;
-}
-
-#page-title {
-  font-size: 26px;
-  text-transform: uppercase;
-  font-family: 'Montserrat' ,sans-serif;
-
-  text-align: center;
-  align-self: center;
-  justify-self: center;
-  transform: rotate(-90deg);
-}
-
-#created-table,
-#generated-table {
-  min-width: 200px;
-  min-height: 100px;
-}
-
-#popup-content label {
-  margin-right: -5%;
-}
-
-#popup-content input {
-  max-width: 100%;
-  padding-left: 2%;
-}
-
-#popup-content textarea {
-  min-width: 100%;
-  padding-left: 2%;
-}
-
-#popup-content textarea {
-  min-height: 110px;
-  resize: none;
+.buttons {
+  font-size: 24px;
 }

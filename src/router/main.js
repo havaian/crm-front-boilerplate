@@ -2,23 +2,41 @@
 // import map_route_redirect from './map_route';
 // import profile_route_default from '.profile_route';
 import { createRouter, createWebHistory } from 'vue-router';
-import MapComponent from '../components/map_component.vue';
-import ProfileComponent from '../components/profile_component.vue';
+import MainComponent from '../components/main_component.vue';
+// import ProfileComponent from '../components/profile_component.vue';
+import ProductComponent from '../components/product_component.vue';
+import EditComponent from '../components/edit_component.vue';
+import AddComponent from '../components/add_component.vue';
 
 const routes = [
     {
         path: '/',
-        name: 'Map',
-        component: MapComponent,
+        name: 'Main',
+        component: MainComponent,
     },
     {
-        path: '/map',
+        path: '/main',
         redirect: '/',
     },
+    // {
+    //     path: '/profile',
+    //     name: 'Profile',
+    //     component: ProfileComponent
+    // },
     {
-        path: '/profile',
-        name: 'Profile',
-        component: ProfileComponent
+        path: '/product/:id',
+        name: 'Product',
+        component: ProductComponent
+    },
+    {
+        path: '/edit/:id',
+        name: 'Edit',
+        component: EditComponent
+    },
+    {
+        path: '/add',
+        name: 'Add',
+        component: AddComponent
     },
     
 ];
